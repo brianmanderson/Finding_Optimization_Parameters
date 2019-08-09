@@ -3,7 +3,8 @@ from keras.optimizers import Adam
 
 class Find_Best_Learning_Rate(object):
     def __init__(self, train_generator=None, validation_generator=None, Model_val=None, epochs=0, lr=0, upper_bound=1, scale=2,
-                 out_path=os.path.join('.','Learning_rates'),metrics=['accuracy'], optimizer=Adam):
+                 out_path=os.path.join('.','Learning_rates'),metrics=['accuracy'], optimizer=Adam, loss='categorical_crossentropy'):
+        self.loss = loss
         self.train_generator = train_generator
         self.validation_generator = validation_generator
         self.epochs = epochs
@@ -17,7 +18,7 @@ class Find_Best_Learning_Rate(object):
 
     def run_for_learning_rate(self, learning_rate):
         optimizer = self.optimizer(lr=learning_rate)
-        self.Model_val.compile(optimizer, loss='categorical_crossentropy', metrics=self.metrics)
+        self.Model_val.compile(optimizer, loss=self.loss, metrics=self.metrics)
         history = self.Model_val.fit_generator(generator=self.train_generator, workers=10, use_multiprocessing=False,
                                                max_queue_size=200,shuffle=True, epochs=self.epochs, initial_epoch=0,
                                                validation_data=self.validation_generator)
