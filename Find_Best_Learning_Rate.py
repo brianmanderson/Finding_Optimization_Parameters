@@ -2,7 +2,7 @@ import os
 from keras.optimizers import Adam
 
 class Find_Best_Learning_Rate(object):
-    def __init__(self, train_generator=None, validation_generator=None, Model_val=None, epochs=0, lr=0, upper_bound=1, scale=2,
+    def __init__(self, train_generator=None, validation_generator=None, Model_val=None, epochs=0, learning_rate=0, upper_bound=1, scale=2,
                  out_path=os.path.join('.','Learning_rates'),metrics=['accuracy'], optimizer=Adam, loss='categorical_crossentropy'):
         self.loss = loss
         self.train_generator = train_generator
@@ -14,7 +14,7 @@ class Find_Best_Learning_Rate(object):
         self.optimizer = optimizer
         if not os.path.exists(out_path):
             os.makedirs(out_path)
-        self.run_over_learning_rates(learning_rate=lr, upper_bound=upper_bound, scale=scale)
+        self.run_over_learning_rates(learning_rate=learning_rate, upper_bound=upper_bound, scale=scale)
 
     def run_for_learning_rate(self, learning_rate):
         optimizer = self.optimizer(lr=learning_rate)
