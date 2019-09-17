@@ -36,6 +36,7 @@ class Find_Best_Learning_Rate(object):
 
     def run_over_learning_rates(self, learning_rate, upper_bound, scale=2):
         while learning_rate < upper_bound:
+            print('Learning rate is ' + str(learning_rate))
             self.run_for_learning_rate(learning_rate)
             learning_rate *= scale
         return None
