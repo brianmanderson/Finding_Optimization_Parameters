@@ -2,7 +2,9 @@ import os
 from matplotlib import pyplot as plt
 import numpy as np
 
-def make_plot(path, metric='acc', min_or_max = max):
+def make_plot(path, metric='acc', min_or_max = max, title=None):
+    if title is None:
+        title = metric
     files = [i for i in os.listdir(path) if i.find('.txt') != -1]
     lrs = []
     metrics = []
@@ -25,7 +27,7 @@ def make_plot(path, metric='acc', min_or_max = max):
     plt.plot(lrs,metrics)
     plt.ylabel(metric)
     plt.xscale('log')
-    plt.title(metric + ' vs Learning Rate')
+    plt.title(title + ' vs Learning Rate')
     plt.xlabel('Learning Rate')
     plt.show()
     return None
