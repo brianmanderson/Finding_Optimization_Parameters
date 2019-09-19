@@ -21,6 +21,7 @@ class Find_Best_Learning_Rate(object):
         out_path = os.path.join(self.out_path, str(learning_rate) + '.txt')
         if os.path.exists(out_path):
             return None # Do not redo a run
+        self.Model_val.reset_states()
         optimizer = self.optimizer(lr=learning_rate)
         self.Model_val.compile(optimizer, loss=self.loss, metrics=self.metrics)
         history = self.Model_val.fit_generator(generator=self.train_generator, workers=self.num_workers, use_multiprocessing=False,
