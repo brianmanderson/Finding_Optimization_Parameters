@@ -1,10 +1,20 @@
 import os
 from keras.optimizers import Adam
+from keras.backend import get_session
+
+def reset_model(model):
+    print('Reset model')
+    session = get_session()
+    for i, layer in enumerate(model.layers):
+        if hasattr(layer, 'kernel_initializer'):
+            model.layers[i].kernel.initializer.run(session=session)
+    return model
 
 class Find_Best_Learning_Rate(object):
-    def __init__(self, train_generator=None, validation_generator=None, Model_val=None, epochs=0, learning_rate=0, upper_bound=1, scale=2,
+    def __init__(self, train_generator=None, validation_generator=None, Model_val=None, epochs=0, learning_rate=0, upper_bound=1, scale=2,reset_model=True,
                  out_path=os.path.join('.','Learning_rates'),metrics=['accuracy'], optimizer=Adam, loss='categorical_crossentropy',num_workers=10):
         self.num_workers = num_workers
+        self.reset_model = reset_model
         self.loss = loss
         self.train_generator = train_generator
         self.validation_generator = validation_generator
@@ -21,7 +31,8 @@ class Find_Best_Learning_Rate(object):
         out_path = os.path.join(self.out_path, str(learning_rate) + '.txt')
         if os.path.exists(out_path):
             return None # Do not redo a run
-        self.Model_val.reset_states()
+        if self.reset_model:
+            self.Model_val = reset_model(self.Model_val)
         optimizer = self.optimizer(lr=learning_rate)
         self.Model_val.compile(optimizer, loss=self.loss, metrics=self.metrics)
         history = self.Model_val.fit_generator(generator=self.train_generator, workers=self.num_workers, use_multiprocessing=False,
