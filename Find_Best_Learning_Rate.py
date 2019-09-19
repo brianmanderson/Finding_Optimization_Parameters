@@ -11,7 +11,7 @@ def reset_model(model):
     return model
 
 class Find_Best_Learning_Rate(object):
-    def __init__(self, train_generator=None, validation_generator=None, Model_val=None, epochs=0, learning_rate=0, upper_bound=1, scale=2,reset_model=True,
+    def __init__(self, train_generator=None, validation_generator=None, Model_val=None, epochs=0, learning_rate=0, upper_bound=1, scale=2,reset_model=False,
                  out_path=os.path.join('.','Learning_rates'),metrics=['accuracy'], optimizer=Adam, loss='categorical_crossentropy',num_workers=10):
         self.num_workers = num_workers
         self.reset_model = reset_model
