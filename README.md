@@ -4,8 +4,6 @@
 
 ### The smoothing for outputs and samplesizes comes from https://www.pyimagesearch.com/2019/08/05/keras-learning-rate-finder/ 
 
-For learning rates, please look at Finding_Best_Learning_Rate
-
 Create your train generators outside of this, if you're using generators found in my github they save the image files after loading (to save time), so it is best to give them to the class rather than redefine each time
 
 
