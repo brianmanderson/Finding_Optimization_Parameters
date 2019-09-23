@@ -8,14 +8,18 @@ Create your train and validation generators outside of this, if you're using gen
 
 Look at Plot_Best_Learning_Rates.py for plotting your generated values
 
-        from Finding_Optimization_Parameters.Find_Best_Learning_Rate import Find_Best_Learning_Rate
+        from Finding_Optimization_Parameters import LR_Finder
         from keras.optimizers import Adam
         import os
         
         train_generator = some_generator
-        validation_generator = some_generator
         Model_val = some_model
         
-        Find_Best_Learning_Rate(train_generator=train_generator,validation_generator=validation_generator,
-                                Model_val=Model_val,epochs=8,out_path=os.path.join('.','test'),learning_rate=1e-6, 
-                                upper_bound=1e-3, metrics=['accuracy'], optimizer=Adam)
+        lower_lr = 1e-8
+        high_lr = 1e-2
+        out_path = os.path.join('.','Learning_rates','Model_Desc')
+        LR_Finder.LearningRateFinder(model=Model_val,metrics=['accuracy'], out_path=out_path,
+        train_generator=train_generator,lower_lr=lower_lr,high_lr=high_lr)
+        
+        # After the model has been made
+        LR_Finder.make_plot(out_path,metric_list=['loss','accuracy'],save_path=out_path)
