@@ -9,7 +9,6 @@ Create your train and validation generators outside of this, if you're using gen
 Look at Plot_Best_Learning_Rates.py for plotting your generated values
 
         from Finding_Optimization_Parameters import LR_Finder
-        from keras.optimizers import Adam
         import os
         
         train_generator = some_generator
