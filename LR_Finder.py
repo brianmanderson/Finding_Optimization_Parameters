@@ -30,14 +30,14 @@ def save_obj(path, obj): # Save almost anything.. dictionary, list, etc.
 
 
 class LearningRateFinder(object):
-    def __init__(self, model, train_generator, stopFactor=4, beta=0.98,metrics=['accuracy'], optimizer=Adam, lr=1e-8,
-                 end_lr=1e-1,epochs=None,batchsize=1,samplesize=2048, steps_per_epoch=None,
+    def __init__(self, model, train_generator, stopFactor=4, beta=0.98,metrics=['accuracy'], optimizer=Adam, lower_lr=1e-8,
+                 high_lr=1e-1,epochs=None,batchsize=1,samplesize=2048, steps_per_epoch=None,
                  loss = 'categorical_crossentropy', out_path=os.path.join('.','Learning_rates')):
         # store the model, stop factor, and beta value (for computing
         # a smoothed, average loss)
-        optimizer = optimizer(lr=lr) # Doesn't really matter, will be over-written anyway
-        self.start_lr = lr
-        self.stop_lr = end_lr
+        optimizer = optimizer(lr=lower_lr) # Doesn't really matter, will be over-written anyway
+        self.start_lr = lower_lr
+        self.stop_lr = high_lr
         model.compile(optimizer, loss=loss, metrics=metrics)
         self.model = model
         self.stopFactor = stopFactor
