@@ -103,7 +103,7 @@ def smooth_values(data_dict,metric='loss'):
     for i in range(len(data_dict[metric])):
         loss = data_dict[metric][i]
         avgLoss = (beta * avgLoss) + ((1 - beta) * loss)
-        smooth = avgLoss / (1 - (beta ** i))
+        smooth = avgLoss / (1 - (beta ** (i+1)))
         smooth_vals.append(smooth)
         lrs.append(data_dict['learning_rate'][i])
     return lrs, smooth_vals
