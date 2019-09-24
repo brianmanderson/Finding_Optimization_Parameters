@@ -37,6 +37,8 @@ class LearningRateFinder(object):
         # a smoothed, average loss)
         if batchsize is None:
             x,y = train_generator.__getitem__(0)
+            if type(x) is list:
+                x = x[0]
             batchsize = x.shape[0]
         optimizer = optimizer(lr=lower_lr) # Doesn't really matter, will be over-written anyway
         self.start_lr = lower_lr
@@ -106,26 +108,30 @@ def smooth_values(data_dict,metric='loss'):
         lrs.append(data_dict['learning_rate'][i])
     return lrs, smooth_vals
 
-def make_plot(path, metric_list=['loss'], title='', save_path=None, smooth=True):
+def make_plot(path, metric_list=['loss'], title='', save_path=None, smooth=True, plot=True):
     if type(metric_list) != list:
         metric_list = [metric_list]
-    output_pickle = [i for i in os.listdir(path) if i.find('Output.pkl') != -1][0]
-    data_dict = load_obj(os.path.join(path, output_pickle))
-    for metric in metric_list:
-        if smooth:
-            lrs, metrics = smooth_values(data_dict,metric=metric)
-        else:
-            lrs, metrics = data_dict['learning_rate'], data_dict[metric]
-        plt.figure()
-        plt.plot(lrs,metrics)
-        plt.ylabel(metric)
-        plt.xscale('log')
-        plt.title(metric + ' vs Learning Rate')
-        plt.xlabel('Learning Rate')
-        if save_path is not None:
-            out_file_name = os.path.join(save_path,title + metric+'.png')
-            plt.savefig(out_file_name)
-        plt.show()
+    output_pickle = [i for i in os.listdir(path) if i.find('Output.pkl') != -1]
+    if output_pickle:
+        data_dict = load_obj(os.path.join(path, output_pickle[0]))
+        for metric in metric_list:
+            if smooth:
+                lrs, metrics = smooth_values(data_dict,metric=metric)
+            else:
+                lrs, metrics = data_dict['learning_rate'], data_dict[metric]
+            plt.figure()
+            plt.plot(lrs,metrics)
+            plt.ylabel(metric)
+            plt.xscale('log')
+            plt.title(metric + ' vs Learning Rate')
+            plt.xlabel('Learning Rate')
+            if plot:
+                plt.show()
+            if save_path is not None:
+                out_file_name = os.path.join(save_path,title + metric+'.png')
+                plt.savefig(out_file_name)
+    else:
+        print('No files at ' + path)
     return None
 
 
