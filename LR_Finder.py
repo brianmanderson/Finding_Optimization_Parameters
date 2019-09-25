@@ -126,11 +126,11 @@ def make_plot(path, metric_list=['loss'], title='', save_path=None, smooth=True,
             plt.xscale('log')
             plt.title(metric + ' vs Learning Rate')
             plt.xlabel('Learning Rate')
-            if plot:
-                plt.show()
             if save_path is not None:
                 out_file_name = os.path.join(save_path,title + metric+'.png')
                 plt.savefig(out_file_name)
+            if plot:
+                plt.show()
     else:
         print('No files at ' + path)
     return None
