@@ -31,7 +31,7 @@ def save_obj(path, obj): # Save almost anything.. dictionary, list, etc.
 
 class LearningRateFinder(object):
     def __init__(self, model, train_generator, stopFactor=4, beta=0.98,metrics=['accuracy'], optimizer=Adam, lower_lr=1e-10,
-                 high_lr=1e1,epochs=5,batchsize=None,steps_per_epoch=None,
+                 high_lr=1e1,epochs=5,batchsize=None,steps_per_epoch=None,samplesize=2048,
                  loss = 'categorical_crossentropy', out_path=os.path.join('.','Learning_rates')):
         # store the model, stop factor, and beta value (for computing
         # a smoothed, average loss)
@@ -52,7 +52,7 @@ class LearningRateFinder(object):
         if not os.path.exists(out_path):
             os.makedirs(out_path)
         self.out_path = out_path
-        self.run(train_generator, batchsize=batchsize, epochs=epochs, steps_per_epoch=steps_per_epoch)
+        self.run(train_generator, batchsize=batchsize, epochs=epochs, steps_per_epoch=steps_per_epoch, samplesize=samplesize)
 
     def on_epoch_end(self, epoch, logs):
         print('Save output_dict')
@@ -75,11 +75,10 @@ class LearningRateFinder(object):
         lr *= self.lrMult
         K.set_value(self.model.optimizer.lr, lr)
 
-    def run(self, train_generator, batchsize=1, epochs=5, steps_per_epoch=None):
+    def run(self, train_generator, batchsize=1, epochs=5, steps_per_epoch=None, samplesize=2048):
         if steps_per_epoch is None:
             steps_per_epoch = np.ceil(len(train_generator) / float(batchsize))
 
-        samplesize = steps_per_epoch * epochs
         if epochs is None:
             epochs = int(np.ceil(samplesize / float(steps_per_epoch)))
 
