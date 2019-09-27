@@ -87,7 +87,7 @@ class LearningRateFinder(object):
 
 def smooth_values(data_dict,metric='loss'):
     avgLoss = 0
-    beta = 0.98
+    beta = 0.95
     smooth_vals = []
     lrs = []
     for i in range(len(data_dict[metric])):
