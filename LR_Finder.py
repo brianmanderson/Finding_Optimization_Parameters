@@ -31,15 +31,9 @@ def save_obj(path, obj): # Save almost anything.. dictionary, list, etc.
 
 class LearningRateFinder(object):
     def __init__(self, model, train_generator, stopFactor=4, beta=0.98,metrics=['accuracy'], optimizer=Adam, lower_lr=1e-10,
-                 high_lr=1e1,epochs=5,batchsize=None,steps_per_epoch=None,samplesize=2048,
-                 loss = 'categorical_crossentropy', out_path=os.path.join('.','Learning_rates')):
+                 high_lr=1e0,epochs=5,loss = 'categorical_crossentropy', out_path=os.path.join('.','Learning_rates')):
         # store the model, stop factor, and beta value (for computing
         # a smoothed, average loss)
-        if batchsize is None:
-            x,y = train_generator.__getitem__(0)
-            if type(x) is list:
-                x = x[0]
-            batchsize = x.shape[0]
         optimizer = optimizer(lr=lower_lr) # Doesn't really matter, will be over-written anyway
         self.start_lr = lower_lr
         self.stop_lr = high_lr
@@ -52,7 +46,7 @@ class LearningRateFinder(object):
         if not os.path.exists(out_path):
             os.makedirs(out_path)
         self.out_path = out_path
-        self.run(train_generator, batchsize=batchsize, epochs=epochs, steps_per_epoch=steps_per_epoch, samplesize=samplesize)
+        self.run(train_generator, epochs=epochs)
 
     def on_epoch_end(self, epoch, logs):
         print('Save output_dict')
@@ -75,12 +69,8 @@ class LearningRateFinder(object):
         lr *= self.lrMult
         K.set_value(self.model.optimizer.lr, lr)
 
-    def run(self, train_generator, batchsize=1, epochs=5, steps_per_epoch=None, samplesize=2048):
-        if steps_per_epoch is None:
-            steps_per_epoch = np.ceil(len(train_generator) / float(batchsize))
-
-        if epochs is None:
-            epochs = int(np.ceil(samplesize / float(steps_per_epoch)))
+    def run(self, train_generator,epochs=5):
+        steps_per_epoch = len(train_generator)
 
         self.lrMult = (self.stop_lr / self.start_lr) ** (1.0 / (epochs*steps_per_epoch))
 
