@@ -1,4 +1,3 @@
-# import the necessary packages
 '''
 This is adapted from code found on https://www.pyimagesearch.com/2019/08/05/keras-learning-rate-finder/
 '''
@@ -43,8 +42,6 @@ class LearningRateFinder(object):
         :param loss: defined loss
         :param out_path: path to create output.pkl file
         '''
-        # store the model, stop factor, and beta value (for computing
-        # a smoothed, average loss)
         optimizer = optimizer(lr=lower_lr) # Doesn't really matter, will be over-written anyway
         self.start_lr = lower_lr
         self.stop_lr = high_lr
@@ -83,13 +80,9 @@ class LearningRateFinder(object):
 
         self.lrMult = (self.stop_lr / self.start_lr) ** (1.0 / (epochs*steps_per_epoch))
 
-        # construct a callback that will be called at the end of each
-        # batch, enabling us to increase our learning rate as training
-        # progresses
         callback = LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
         callback_epoch_end = LambdaCallback(on_epoch_end=lambda epoch, logs: self.on_epoch_end(epoch, logs))
 
-        # check to see if we are using a data iterator
         self.model.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False,max_queue_size=200,
                                  shuffle=True, epochs=epochs, callbacks=[callback, callback_epoch_end])
         save_obj(os.path.join(self.out_path,'Output.pkl'),self.output_dict)
