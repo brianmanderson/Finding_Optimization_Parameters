@@ -31,7 +31,7 @@ def save_obj(path, obj): # Save almost anything.. dictionary, list, etc.
 
 class LearningRateFinder(object):
     def __init__(self, model, train_generator, stopFactor=4, beta=0.98,metrics=['accuracy'], optimizer=Adam, lower_lr=1e-10,
-                 high_lr=1e0,epochs=5,loss = 'categorical_crossentropy', out_path=os.path.join('.','Learning_rates')):
+                 high_lr=1e0,epochs=5,loss = 'categorical_crossentropy', out_path=os.path.join('.','Learning_rates'), max_loss=None):
         # store the model, stop factor, and beta value (for computing
         # a smoothed, average loss)
         optimizer = optimizer(lr=lower_lr) # Doesn't really matter, will be over-written anyway
@@ -41,6 +41,7 @@ class LearningRateFinder(object):
         self.model = model
         self.stopFactor = stopFactor
         self.beta = beta
+        self.max_loss = max_loss
         self.output_dict = {}
 
         if not os.path.exists(out_path):
@@ -53,6 +54,11 @@ class LearningRateFinder(object):
         save_obj(os.path.join(self.out_path, 'Output.pkl'), self.output_dict)
 
     def on_batch_end(self, batch, logs):
+        if self.max_loss is None:
+            self.max_loss = logs['loss']
+        elif logs['loss'] > 2*self.max_loss:
+            print('Stopping early')
+            self.model.stop_training = True
         # grab the current learning rate and add log it to the list of
         # learning rates that we've tried
         lr = K.get_value(self.model.optimizer.lr)
@@ -98,32 +104,48 @@ def smooth_values(data_dict,metric='loss'):
         lrs.append(data_dict['learning_rate'][i])
     return lrs, smooth_vals
 
-def make_plot(path, metric_list=['loss'], title='', save_path=None, smooth=True, plot=False):
+def make_plot(paths, metric_list=['loss'], title='', save_path=None, smooth=True, plot=False):
     if type(metric_list) != list:
         metric_list = [metric_list]
-    output_pickle = [i for i in os.listdir(path) if i.find('Output.pkl') != -1]
-    if output_pickle:
-        data_dict = load_obj(os.path.join(path, output_pickle[0]))
-        for metric in metric_list:
-            if smooth:
-                lrs, metrics = smooth_values(data_dict,metric=metric)
-            else:
-                lrs, metrics = data_dict['learning_rate'], data_dict[metric]
-            plt.figure()
-            plt.plot(lrs,metrics)
-            plt.ylabel(metric)
-            plt.xscale('log')
-            plt.title(metric + ' vs Learning Rate')
-            plt.xlabel('Learning Rate')
-            if save_path is not None:
-                out_file_name = os.path.join(save_path,title + metric+'.png')
-                plt.savefig(out_file_name)
-            if plot:
-                plt.show()
-    else:
-        print('No files at ' + path)
+    if type(paths) != list:
+        paths = [paths]
+    for metric in metric_list:
+        all_lrs = {metric:[]}
+        all_metrics = {metric:[]}
+    for path in paths:
+        output_pickle = [i for i in os.listdir(path) if i.find('Output.pkl') != -1]
+        if output_pickle:
+            data_dict = load_obj(os.path.join(path, output_pickle[0]))
+            for metric in metric_list:
+                if smooth:
+                    lrs, metrics = smooth_values(data_dict,metric=metric)
+                else:
+                    lrs, metrics = data_dict['learning_rate'], data_dict[metric]
+
+                all_lrs[metric].append(lrs)
+                all_metrics[metric].append(metrics)
+        else:
+            print('No files at ' + path)
+
+    for metric in metric_list:
+        metric_data = np.asarray(all_metrics[metric])
+        lrs = np.asarray(all_lrs[metric])
+        averaged_data = np.mean(metric_data,axis=0)
+        plot_data(lrs[0,:], averaged_data, metric, title, plot, save_path)
     return None
 
+def plot_data(lrs, metrics, metric, title, plot, save_path=None):
+    plt.figure()
+    plt.plot(lrs, metrics)
+    plt.ylabel(metric)
+    plt.xscale('log')
+    plt.title(metric + ' vs Learning Rate')
+    plt.xlabel('Learning Rate')
+    if save_path is not None:
+        out_file_name = os.path.join(save_path, title + metric + '.png')
+        plt.savefig(out_file_name)
+    if plot:
+        plt.show()
 
 if __name__ == '__main__':
     xxx = 1
