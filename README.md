@@ -16,8 +16,11 @@ Create your train generators outside of this, if you're using generators found i
         lower_lr = 1e-8
         high_lr = 1e-2
         out_path = os.path.join('.','Learning_rates','Model_Desc')
-        LR_Finder.LearningRateFinder(model=Model_val,metrics=['accuracy'], out_path=out_path,
-        train_generator=train_generator,lower_lr=lower_lr,high_lr=high_lr)
+        for iteration in range(3):
+                write_path = os.path.join(out_path,'Iteration_' + str(iteration))
+                LR_Finder.LearningRateFinder(model=Model_val,metrics=['accuracy'], out_path=write_path,
+                train_generator=train_generator,lower_lr=lower_lr,high_lr=high_lr)
         
         # After the model has been made
-        LR_Finder.make_plot(out_path,metric_list=['loss','accuracy'],save_path=out_path)
+        iteration_paths = [os.path.join(out_path,i) for i in os.listdir(out_path)] # Providing a list will create an average output
+        LR_Finder.make_plot(iteration_paths,metric_list=['loss','accuracy'],save_path=out_path, plot=True)
