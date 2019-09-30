@@ -30,8 +30,19 @@ def save_obj(path, obj): # Save almost anything.. dictionary, list, etc.
 
 
 class LearningRateFinder(object):
-    def __init__(self, model, train_generator, stopFactor=4, beta=0.98,metrics=['accuracy'], optimizer=Adam, lower_lr=1e-10,
-                 high_lr=1e0,epochs=5,loss = 'categorical_crossentropy', out_path=os.path.join('.','Learning_rates'), max_loss=None):
+    def __init__(self, model, train_generator, metrics=['accuracy'], optimizer=Adam, lower_lr=1e-10,
+                 high_lr=1e0,epochs=5,loss = 'categorical_crossentropy', out_path=os.path.join('.','Learning_rates')):
+        '''
+        :param model: Keras model
+        :param train_generator: Keras generator
+        :param metrics: Metrics to track, loss is automatically included
+        :param optimizer: Keras optimizer
+        :param lower_lr: low learning rate to investigate
+        :param high_lr: high learning rate to investigate
+        :param epochs: number of epochs to perform
+        :param loss: defined loss
+        :param out_path: path to create output.pkl file
+        '''
         # store the model, stop factor, and beta value (for computing
         # a smoothed, average loss)
         optimizer = optimizer(lr=lower_lr) # Doesn't really matter, will be over-written anyway
@@ -39,9 +50,6 @@ class LearningRateFinder(object):
         self.stop_lr = high_lr
         model.compile(optimizer, loss=loss, metrics=metrics)
         self.model = model
-        self.stopFactor = stopFactor
-        self.beta = beta
-        self.max_loss = max_loss
         self.output_dict = {}
 
         if not os.path.exists(out_path):
@@ -54,11 +62,6 @@ class LearningRateFinder(object):
         save_obj(os.path.join(self.out_path, 'Output.pkl'), self.output_dict)
 
     def on_batch_end(self, batch, logs):
-        if self.max_loss is None:
-            self.max_loss = logs['loss']
-        elif logs['loss'] > 2*self.max_loss:
-            print('Stopping early')
-            self.model.stop_training = True
         # grab the current learning rate and add log it to the list of
         # learning rates that we've tried
         lr = K.get_value(self.model.optimizer.lr)
@@ -105,6 +108,15 @@ def smooth_values(data_dict,metric='loss'):
     return lrs, smooth_vals
 
 def make_plot(paths, metric_list=['loss'], title='', save_path=None, smooth=True, plot=False):
+    '''
+    :param paths: type(List or String), if list, will take the average value
+    :param metric_list: type(List or String), metrics wanted to be looked at
+    :param title: type(String), name of title for graph
+    :param save_path: type(String), path to folder of graph creation
+    :param smooth: type(Bool), smooth values?
+    :param plot: type(Bool), plot graph or just save?
+    :return:
+    '''
     if type(metric_list) != list:
         metric_list = [metric_list]
     if type(paths) != list:
