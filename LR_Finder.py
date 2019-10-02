@@ -153,9 +153,6 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, smooth=True
                 if average_change < 1:
                     min_lr = lrs[i]
                     break
-            fid = open(os.path.join(save_path, title + '_lrs.txt'), 'w+')
-            fid.write(str(min_lr) + ',' + str(max_lr))
-            fid.close()
         plot_data(lrs[:], averaged_data, metric, title, plot, save_path, min_lr, max_lr)
     return None
 
