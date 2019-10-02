@@ -87,20 +87,20 @@ class LearningRateFinder(object):
                                  shuffle=True, epochs=epochs, callbacks=[callback, callback_epoch_end])
         save_obj(os.path.join(self.out_path,'Output.pkl'),self.output_dict)
 
-def smooth_values(data_dict,metric='loss'):
+
+def smooth_values(loss_vals):
     avgLoss = 0
     beta = 0.95
     smooth_vals = []
-    lrs = []
-    for i in range(len(data_dict[metric])):
-        loss = data_dict[metric][i]
+    for i in range(len(loss_vals)):
+        loss = loss_vals[i]
         avgLoss = (beta * avgLoss) + ((1 - beta) * loss)
         smooth = avgLoss / (1 - (beta ** (i+1)))
         smooth_vals.append(smooth)
-        lrs.append(data_dict['learning_rate'][i])
-    return lrs, smooth_vals
+    return smooth_vals
 
-def make_plot(paths, metric_list=['loss'], title='', save_path=None, smooth=True, plot=False):
+
+def make_plot(paths, metric_list=['loss'], title='', save_path=None, smooth=True, plot=False, auto_rates=False):
     '''
     :param paths: type(List or String), if list, will take the average value
     :param metric_list: type(List or String), metrics wanted to be looked at
@@ -108,6 +108,7 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, smooth=True
     :param save_path: type(String), path to folder of graph creation
     :param smooth: type(Bool), smooth values?
     :param plot: type(Bool), plot graph or just save?
+    :param auto_rates: type(Bool), write out min and max lr
     :return:
     '''
     if type(metric_list) != list:
@@ -122,11 +123,7 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, smooth=True
         if output_pickle:
             data_dict = load_obj(os.path.join(path, output_pickle[0]))
             for metric in metric_list:
-                if smooth:
-                    lrs, metrics = smooth_values(data_dict,metric=metric)
-                else:
-                    lrs, metrics = data_dict['learning_rate'], data_dict[metric]
-
+                lrs, metrics = data_dict['learning_rate'], data_dict[metric]
                 all_lrs[metric].append(lrs)
                 all_metrics[metric].append(metrics)
         else:
@@ -134,18 +131,47 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, smooth=True
 
     for metric in metric_list:
         metric_data = np.asarray(all_metrics[metric])
-        lrs = np.asarray(all_lrs[metric])
+        lrs = np.asarray(all_lrs[metric])[0]
         averaged_data = np.mean(metric_data,axis=0)
-        plot_data(lrs[0,:], averaged_data, metric, title, plot, save_path)
+        min_lr, max_lr = None, None
+        if smooth:
+            averaged_data = smooth_values(averaged_data)
+        if auto_rates and metric == 'loss':
+            min_loss = np.min(averaged_data)
+            min_loss_index = np.where(averaged_data == min_loss)[0][0]
+            max_lr = lrs[min_loss_index]
+            min_lr = 0
+            for ii in range(min_loss_index, 0, -1):
+                loss = averaged_data[ii]
+                if loss > min_loss * 5:  # If it is at least 50% higher, we're on the curve
+                    break
+            for i in range(ii, 10, -1):
+                previous_average = np.average(averaged_data[i - 10:i])
+                current_average = np.average(averaged_data[i:i + 10])
+                average_change = (previous_average - current_average) / (
+                            np.log(lrs[i + 10]) - np.log(lrs[i - 10])) * 100
+                if average_change < 1:
+                    min_lr = lrs[i]
+                    break
+            fid = open(os.path.join(save_path, title + '_lrs.txt'), 'w+')
+            fid.write(str(min_lr) + ',' + str(max_lr))
+            fid.close()
+        plot_data(lrs[:], averaged_data, metric, title, plot, save_path, min_lr, max_lr)
     return None
 
-def plot_data(lrs, metrics, metric, title, plot, save_path=None):
+def plot_data(lrs, metrics, metric, title, plot, save_path=None, min_lr=None, max_lr=None):
     plt.figure()
     plt.plot(lrs, metrics)
     plt.ylabel(metric)
     plt.xscale('log')
     plt.title(metric + ' vs Learning Rate')
     plt.xlabel('Learning Rate')
+    if min_lr is not None:
+        plt.plot([min_lr, min_lr],[np.min(metrics),np.max(metrics)],'r-', label='Min_LR: ' + str(min_lr))
+    if max_lr is not None:
+        plt.plot([max_lr, max_lr],[np.min(metrics),np.max(metrics)],'k-', label='Max_LR: ' + str(max_lr))
+    if min_lr is not None or max_lr is not None:
+        plt.legend()
     if save_path is not None:
         out_file_name = os.path.join(save_path, title + metric + '.png')
         plt.savefig(out_file_name)
