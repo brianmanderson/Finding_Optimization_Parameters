@@ -82,8 +82,7 @@ class LearningRateFinder(object):
 
         callback = LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
         callback_epoch_end = LambdaCallback(on_epoch_end=lambda epoch, logs: self.on_epoch_end(epoch, logs))
-
-        self.model.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False,max_queue_size=200,
+        self.model.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False,max_queue_size=10,
                                  shuffle=True, epochs=epochs, callbacks=[callback, callback_epoch_end])
         save_obj(os.path.join(self.out_path,'Output.pkl'),self.output_dict)
 
@@ -115,9 +114,11 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, smooth=True
         metric_list = [metric_list]
     if type(paths) != list:
         paths = [paths]
+    all_lrs = {}
+    all_metrics = {}
     for metric in metric_list:
-        all_lrs = {metric:[]}
-        all_metrics = {metric:[]}
+        all_lrs[metric] = []
+        all_metrics[metric] = []
     for path in paths:
         output_pickle = [i for i in os.listdir(path) if i.find('Output.pkl') != -1]
         if output_pickle:
