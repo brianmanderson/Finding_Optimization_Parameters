@@ -88,7 +88,7 @@ def turn_list_dictionaries_into_one(all_dictionaries, metric_name_and_criteria={
     return total_dictionary
 
 
-def create_excel_from_event(excel_out_path=os.path.join('.','Model_Optimization.xlsx'), input_path=None,
+def create_excel_from_event(input_path=None, excel_out_path=os.path.join('.','Model_Optimization.xlsx'),
                             names=['Layers','Filters','Max_Filters','Atrous_Blocks'],
                             metric_name_and_criteria={'val_loss':np.min,'val_dice_coef_3D':np.max}):
     if input_path is None:
