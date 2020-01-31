@@ -69,7 +69,12 @@ def turn_list_dictionaries_into_one(all_dictionaries, metric_name_and_criteria={
             total_dictionary['Full_Name'].append(full_name)
             for key_name in key_names:
                 if key_name in temp_dictionary:
-                    total_dictionary[key_name].append(int(temp_dictionary[key_name]))
+                    i = str(float(temp_dictionary[key_name])) # Gotta lay the whole value out
+                    if i[-2:] == '.0':
+                        i = int(float(i))
+                    else:
+                        i = float(i)
+                    total_dictionary[key_name].append(i)
                 else:
                     total_dictionary[key_name].append('')
             for metric_name in metric_name_and_criteria:
