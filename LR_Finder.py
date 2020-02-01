@@ -87,9 +87,8 @@ class LearningRateFinder(object):
         save_obj(os.path.join(self.out_path,'Output.pkl'),self.output_dict)
 
 
-def smooth_values(loss_vals):
+def smooth_values(loss_vals,beta=0.95):
     avgLoss = 0
-    beta = 0.95
     smooth_vals = []
     for i in range(len(loss_vals)):
         loss = loss_vals[i]
@@ -99,7 +98,7 @@ def smooth_values(loss_vals):
     return smooth_vals
 
 
-def make_plot(paths, metric_list=['loss'], title='', save_path=None, smooth=True, plot=False, auto_rates=False):
+def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, plot=False, auto_rates=False):
     '''
     :param paths: type(List or String), if list, will take the average value
     :param metric_list: type(List or String), metrics wanted to be looked at
@@ -135,8 +134,8 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, smooth=True
         lrs = np.asarray(all_lrs[metric])[0]
         averaged_data = np.mean(metric_data,axis=0)
         min_lr, max_lr = None, None
-        if smooth:
-            averaged_data = smooth_values(averaged_data)
+        if beta > 0.0:
+            averaged_data = smooth_values(averaged_data, beta=beta)
         if auto_rates and metric == 'loss':
             min_loss = np.min(averaged_data)
             min_loss_index = np.where(averaged_data == min_loss)[0][0]
@@ -168,9 +167,15 @@ def plot_data(lrs, metrics, metric, title, plot, save_path=None, min_lr=None, ma
         plt.plot([min_lr, min_lr],[np.min(metrics),np.max(metrics)],'r-', label='Min_LR: ' + str(min_lr))
     if max_lr is not None:
         plt.plot([max_lr, max_lr],[np.min(metrics),np.max(metrics)],'k-', label='Max_LR: ' + str(max_lr))
+    val = np.min(lrs)
+    while val < np.max(lrs):
+        plt.plot([val, val], [np.min(metrics), np.max(metrics)], 'g-')
+        val *= 10
     if min_lr is not None or max_lr is not None:
         plt.legend()
     if save_path is not None:
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
         out_file_name = os.path.join(save_path, title + metric + '.png')
         plt.savefig(out_file_name)
     if plot:
