@@ -169,7 +169,10 @@ def plot_data(lrs, metrics, metric, title, plot, save_path=None, min_lr=None, ma
         plt.plot([max_lr, max_lr],[np.min(metrics),np.max(metrics)],'k-', label='Max_LR: ' + str(max_lr))
     val = np.min(lrs)
     while val < np.max(lrs):
-        plt.plot([val, val], [np.min(metrics), np.max(metrics)], 'g-')
+        for add in [2,4,6,8]:
+            plt.plot([val + val*add, val + val*add], [np.min(metrics), np.max(metrics)], 'y-')
+        for add in [0,1,3,5,7,9]:
+            plt.plot([val + val*add, val + val*add], [np.min(metrics), np.max(metrics)], 'g-')
         val *= 10
     if min_lr is not None or max_lr is not None:
         plt.legend()
