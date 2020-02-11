@@ -1,6 +1,6 @@
 import os
-from keras.optimizers import Adam
-from keras.backend import get_session
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.backend import get_session
 
 def reset_model(model):
     print('Reset model')
