@@ -100,7 +100,7 @@ def create_excel_from_event(input_path=None, excel_out_path=os.path.join('.','Mo
     all_dictionaries = down_folder(input_path, [],names=names, metric_name_and_criteria=metric_name_and_criteria)
     total_dictionary = turn_list_dictionaries_into_one(all_dictionaries, metric_name_and_criteria=metric_name_and_criteria)
     df = pd.DataFrame(total_dictionary)
-    df.to_excel(excel_out_path, index=False)
+    df.to_excel(excel_out_path, index=0)
     return None
 
 
