@@ -4,7 +4,7 @@ This is adapted from code found on https://www.pyimagesearch.com/2019/08/05/kera
 from tensorflow.keras.callbacks import LambdaCallback
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import backend as K
-from tensorflow.train.experimental import enable_mixed_precision_graph_rewrite
+import tensorflow as tf
 import os, pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,7 +30,7 @@ def save_obj(path, obj): # Save almost anything.. dictionary, list, etc.
 
 
 class LearningRateFinder(object):
-    def __init__(self, model, train_generator, metrics=['accuracy'], optimizer=Adam, lower_lr=1e-10,
+    def __init__(self, model, train_generator, metrics=['accuracy'], optimizer=Adam, lower_lr=1e-10, steps_per_epoch=None,
                  high_lr=1e0,epochs=5,loss = 'categorical_crossentropy', out_path=os.path.join('.','Learning_rates')):
         '''
         :param model: Keras model
@@ -43,8 +43,11 @@ class LearningRateFinder(object):
         :param loss: defined loss
         :param out_path: path to create output.pkl file
         '''
+        if steps_per_epoch is None:
+            steps_per_epoch = len(train_generator)
+        self.steps_per_epoch = steps_per_epoch
         optimizer = optimizer(lr=lower_lr) # Doesn't really matter, will be over-written anyway
-        optimizer = enable_mixed_precision_graph_rewrite(optimizer)
+        optimizer = tf.train.experimental.enable_mixed_precision_graph_rewrite(optimizer)
         self.start_lr = lower_lr
         self.stop_lr = high_lr
         model.compile(optimizer, loss=loss, metrics=metrics)
@@ -78,14 +81,17 @@ class LearningRateFinder(object):
         K.set_value(self.model.optimizer.lr, lr)
 
     def run(self, train_generator,epochs=5):
-        steps_per_epoch = len(train_generator)
 
-        self.lrMult = (self.stop_lr / self.start_lr) ** (1.0 / (epochs*steps_per_epoch))
+        self.lrMult = (self.stop_lr / self.start_lr) ** (1.0 / (epochs*self.steps_per_epoch))
 
         callback = LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
         callback_epoch_end = LambdaCallback(on_epoch_end=lambda epoch, logs: self.on_epoch_end(epoch, logs))
-        self.model.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False,max_queue_size=10,
-                                 shuffle=True, epochs=epochs, callbacks=[callback, callback_epoch_end])
+        if type(train_generator) is not tf.keras.utils.Sequence:
+            self.model.fit(train_generator, epochs=epochs, steps_per_epoch=self.steps_per_epoch,
+                           callbacks=[callback, callback_epoch_end])
+        else:
+            self.model.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False,max_queue_size=10,
+                                     shuffle=True, epochs=epochs, callbacks=[callback, callback_epoch_end])
         save_obj(os.path.join(self.out_path,'Output.pkl'),self.output_dict)
 
 
