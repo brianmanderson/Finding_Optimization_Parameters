@@ -1,9 +1,9 @@
 '''
 This is adapted from code found on https://www.pyimagesearch.com/2019/08/05/keras-learning-rate-finder/
 '''
-from tensorflow.python.keras.callbacks import LambdaCallback
-from tensorflow.python.keras.optimizers import Adam
-from tensorflow.python.keras import backend as K
+from tensorflow.keras.callbacks import LambdaCallback
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import backend as K
 import os, pickle
 import numpy as np
 import matplotlib.pyplot as plt
