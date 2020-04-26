@@ -4,6 +4,7 @@ This is adapted from code found on https://www.pyimagesearch.com/2019/08/05/kera
 from tensorflow.keras.callbacks import LambdaCallback
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import backend as K
+from tensorflow.train.experimental import enable_mixed_precision_graph_rewrite
 import os, pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,6 +44,7 @@ class LearningRateFinder(object):
         :param out_path: path to create output.pkl file
         '''
         optimizer = optimizer(lr=lower_lr) # Doesn't really matter, will be over-written anyway
+        optimizer = enable_mixed_precision_graph_rewrite(optimizer)
         self.start_lr = lower_lr
         self.stop_lr = high_lr
         model.compile(optimizer, loss=loss, metrics=metrics)
