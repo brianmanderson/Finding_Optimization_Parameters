@@ -2,7 +2,7 @@
 This is adapted from code found on https://www.pyimagesearch.com/2019/08/05/keras-learning-rate-finder/
 '''
 from tensorflow.keras.callbacks import LambdaCallback
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import SGD
 from tensorflow.keras import backend as K
 import tensorflow as tf
 import os, pickle
@@ -30,7 +30,7 @@ def save_obj(path, obj): # Save almost anything.. dictionary, list, etc.
 
 
 class LearningRateFinder(object):
-    def __init__(self, model, train_generator, metrics=['accuracy'], optimizer=Adam, lower_lr=1e-10, steps_per_epoch=None,
+    def __init__(self, model, train_generator, metrics=['accuracy'], optimizer=SGD, lower_lr=1e-10, steps_per_epoch=None,
                  high_lr=1e0,epochs=5,loss = 'categorical_crossentropy', out_path=os.path.join('.','Learning_rates')):
         '''
         :param model: Keras model
