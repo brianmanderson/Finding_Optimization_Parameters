@@ -57,7 +57,11 @@ def complete_dictionary(all_dictionaries):
     # Get the names of all variables, we will need to make a complete list
     out_dictionary = {'Trial_ID':[]}
     for trial_id in all_dictionaries:
-        out_dictionary['Trial_ID'].append(int(trial_id.split('_')[-1]))
+        try:
+            out_dictionary['Trial_ID'].append(int(trial_id.split('_')[-1]))
+        except:
+            print('{} is not valid'.format(trial_id))
+            continue
         for key in all_dictionaries[trial_id]:
             if key not in out_dictionary:
                 out_dictionary[key] = []
