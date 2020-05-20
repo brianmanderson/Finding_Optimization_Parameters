@@ -56,6 +56,8 @@ def return_current_df(run_data, features_list=['layers', 'filters', 'max_filters
             val = run_data[feature]
             if type(val) is bool:
                 val = int(val)
+            elif type(val) is tuple:
+                val = val[0]
         out_dict[feature] = [val]
     out_features = [i for i in out_dict.keys()]
     return pd.DataFrame(out_dict), out_features
@@ -73,5 +75,8 @@ def return_hparams(run_data, features_list, excluded_keys=['iteration','save']):
         if layer_key in run_data.keys():
             if hparams is None:
                 hparams = OrderedDict()
-            hparams[hp.HParam(layer_key, hp.Discrete([run_data[layer_key]]))] = run_data[layer_key]
+            value = run_data[layer_key]
+            if type(value) is tuple:
+                value = value[0]
+            hparams[hp.HParam(layer_key, hp.Discrete([run_data[layer_key]]))] = value
     return hparams
