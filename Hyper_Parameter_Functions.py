@@ -78,5 +78,5 @@ def return_hparams(run_data, features_list, excluded_keys=['iteration','save']):
             value = run_data[layer_key]
             if type(value) is tuple:
                 value = value[0]
-            hparams[hp.HParam(layer_key, hp.Discrete([run_data[layer_key]]))] = value
+            hparams[hp.HParam(layer_key, hp.Discrete([value]))] = value
     return hparams
