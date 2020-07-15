@@ -7,7 +7,8 @@ from tensorflow.python.summary.summary_iterator import summary_iterator
 import pandas as pd
 
 
-def add_to_dictionary(path,all_dictionaries,path_id,metric_name_and_criteria={'val_loss':np.min,'val_dice_coef_3D':np.max}):
+def add_to_dictionary(path, all_dictionaries, path_id,
+                      metric_name_and_criteria={'val_loss':np.min,'val_dice_coef_3D':np.max}, final_val=False):
     path = path.lower()
     file_list = [i for i in os.listdir(path) if i.find('event') == 0]
     for file in file_list:
@@ -22,7 +23,9 @@ def add_to_dictionary(path,all_dictionaries,path_id,metric_name_and_criteria={'v
             if metric_name in metric_name_and_criteria.keys():
                 metric = metric_name_and_criteria[metric_name](temp_dictionary[metric_name])
             else:
-                if metric_name.find('accuracy') != -1 or metric_name.find('dice') != -1 or metric_name.find('dsc') != -1:
+                if final_val:
+                    metric = temp_dictionary[metric_name][-1]
+                elif metric_name.find('accuracy') != -1 or metric_name.find('dice') != -1 or metric_name.find('dsc') != -1:
                     metric = np.max(temp_dictionary[metric_name])
                 else:
                     metric = np.min(temp_dictionary[metric_name])
@@ -32,7 +35,8 @@ def add_to_dictionary(path,all_dictionaries,path_id,metric_name_and_criteria={'v
     return all_dictionaries
 
 
-def down_folder(path, all_dictionaries, metric_name_and_criteria={'epoch_loss':np.min,'val_dice_coef_3D':np.max}):
+def down_folder(path, all_dictionaries, metric_name_and_criteria={'epoch_loss':np.min,'val_dice_coef_3D':np.max},
+                final_val=False):
     files = []
     folders = []
     for root, folders, files in os.walk(path):
@@ -45,11 +49,13 @@ def down_folder(path, all_dictionaries, metric_name_and_criteria={'epoch_loss':n
         path_id = path_id[-2]
         try:
             print(path)
-            add_to_dictionary(path, all_dictionaries,path_id=path_id, metric_name_and_criteria=metric_name_and_criteria)
+            add_to_dictionary(path, all_dictionaries,path_id=path_id,
+                              metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
         except:
             return None
     for folder in folders:
-        down_folder(os.path.join(path,folder),all_dictionaries,metric_name_and_criteria=metric_name_and_criteria)
+        down_folder(os.path.join(path, folder), all_dictionaries,
+                    metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
     return None
 
 
@@ -80,19 +86,28 @@ def combine_hparamxlsx_and_metricxlsx(hparameter_excel_sheet, total_dictionary_x
     combined_df.to_excel(out_path, index=0)
     return None
 
+
 def create_excel_from_event(input_path=None, excel_out_path=os.path.join('.','Model_Optimization.xlsx'),
-                            metric_name_and_criteria={'val_loss':np.min,'val_dice_coef_3D':np.max}):
+                            metric_name_and_criteria={'val_loss':np.min,'val_dice_coef_3D':np.max},
+                            final_val=False):
+    '''
+    :param input_path: folder header path to Trial_IDs
+    :param excel_out_path: path to write excel sheet
+    :param metric_name_and_criteria: optional, dictionary of value:metric
+    :param final_val: only take the final value of training?
+    :return:
+    '''
     if input_path is None:
         return None
     all_dictionaries = {}
-    down_folder(input_path, all_dictionaries, metric_name_and_criteria=metric_name_and_criteria)
+    down_folder(input_path, all_dictionaries, metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
     total_dictionary = complete_dictionary(all_dictionaries)
     df = pd.DataFrame(total_dictionary)
     df.to_excel(excel_out_path, index=0)
     return None
 
 
-def plot_from_excel(excel_path,variable_name='layers',metric_name='val_loss',log_val=True,criterias=[]):
+def plot_from_excel(excel_path, variable_name='layers', metric_name='val_loss', log_val=True, criterias=[]):
     # criteria_base = lambda x, variable_name, value: np.asarray(list(x[variable_name].values())) == value
     # criteria = [partial(criteria_base, variable_name='layers', value=5)]
     variable_name = variable_name.lower()
