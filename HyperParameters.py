@@ -4,6 +4,7 @@ from _collections import OrderedDict
 from tensorboard.plugins.hparams import api as hp
 import os
 import pandas as pd
+import numpy as np
 
 
 def return_pandas_df(excel_path, features_list=('layers', 'filters', 'max_filters', 'min_lr', 'max_lr')):
@@ -44,6 +45,14 @@ def return_hparams(run_data, features_list, excluded_keys=('iteration', 'save'))
                 hparams = OrderedDict()
             hparams[hp.HParam(layer_key, hp.Discrete([run_data[layer_key]]))] = run_data[layer_key]
     return hparams
+
+
+def compare_base_current(data_frame, current_run_df, features_list):
+    current_array = current_run_df[features_list].values
+    base_array = data_frame[features_list].values
+    if np.any(base_array) and np.max([np.min(i == current_array) for i in base_array]):
+        return True
+    return False
 
 
 if __name__ == '__main__':
