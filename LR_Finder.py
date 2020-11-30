@@ -140,6 +140,7 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, 
         metric_data = np.asarray(all_metrics[metric])
         lrs = np.asarray(all_lrs[metric])[0]
         averaged_data = np.mean(metric_data,axis=0)
+        averaged_data = np.nan_to_num(averaged_data, nan=np.inf)
         min_lr, max_lr = None, None
         if beta > 0.0:
             averaged_data = smooth_values(averaged_data, beta=beta)
