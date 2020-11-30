@@ -21,7 +21,7 @@ def load_obj(path):
         return out
 
 
-def save_obj(path, obj): # Save almost anything.. dictionary, list, etc.
+def save_obj(path, obj):  # Save almost anything.. dictionary, list, etc.
     if path.find('.pkl') == -1:
         path += '.pkl'
     with open(path, 'wb') as f:
@@ -30,8 +30,9 @@ def save_obj(path, obj): # Save almost anything.. dictionary, list, etc.
 
 
 class LearningRateFinder(object):
-    def __init__(self, model, train_generator, metrics=['accuracy'], optimizer=SGD, lower_lr=1e-10, steps_per_epoch=None,
-                 high_lr=1e0,epochs=5,loss = 'categorical_crossentropy', out_path=os.path.join('.','Learning_rates')):
+    def __init__(self, model, train_generator, metrics=['accuracy'], optimizer=SGD, lower_lr=1e-10,
+                 steps_per_epoch=None,
+                 high_lr=1e0, epochs=5, loss='categorical_crossentropy', out_path=os.path.join('.', 'Learning_rates')):
         '''
         :param model: Keras model
         :param train_generator: Keras generator
@@ -46,7 +47,7 @@ class LearningRateFinder(object):
         if steps_per_epoch is None:
             steps_per_epoch = len(train_generator)
         self.steps_per_epoch = steps_per_epoch
-        optimizer = optimizer(lr=lower_lr) # Doesn't really matter, will be over-written anyway
+        optimizer = optimizer(lr=lower_lr)  # Doesn't really matter, will be over-written anyway
         self.start_lr = lower_lr
         self.stop_lr = high_lr
         model.compile(optimizer, loss=loss, metrics=metrics)
@@ -79,9 +80,9 @@ class LearningRateFinder(object):
         lr *= self.lrMult
         K.set_value(self.model.optimizer.lr, lr)
 
-    def run(self, train_generator,epochs=5):
+    def run(self, train_generator, epochs=5):
 
-        self.lrMult = (self.stop_lr / self.start_lr) ** (1.0 / (epochs*self.steps_per_epoch))
+        self.lrMult = (self.stop_lr / self.start_lr) ** (1.0 / (epochs * self.steps_per_epoch))
 
         callback = LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
         callback_epoch_end = LambdaCallback(on_epoch_end=lambda epoch, logs: self.on_epoch_end(epoch, logs))
@@ -89,18 +90,19 @@ class LearningRateFinder(object):
             self.model.fit(train_generator, epochs=epochs, steps_per_epoch=self.steps_per_epoch,
                            callbacks=[callback, callback_epoch_end])
         else:
-            self.model.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False,max_queue_size=10,
+            self.model.fit_generator(generator=train_generator, workers=10, use_multiprocessing=False,
+                                     max_queue_size=10,
                                      shuffle=True, epochs=epochs, callbacks=[callback, callback_epoch_end])
-        save_obj(os.path.join(self.out_path,'Output.pkl'),self.output_dict)
+        save_obj(os.path.join(self.out_path, 'Output.pkl'), self.output_dict)
 
 
-def smooth_values(loss_vals,beta=0.95):
+def smooth_values(loss_vals, beta=0.95):
     avgLoss = 0
     smooth_vals = []
     for i in range(len(loss_vals)):
         loss = loss_vals[i]
         avgLoss = (beta * avgLoss) + ((1 - beta) * loss)
-        smooth = avgLoss / (1 - (beta ** (i+1)))
+        smooth = avgLoss / (1 - (beta ** (i + 1)))
         smooth_vals.append(smooth)
     return smooth_vals
 
@@ -157,31 +159,32 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, 
                 previous_average = np.average(avg_data[i - 10:i])
                 current_average = np.average(avg_data[i:i + 10])
                 average_change = (previous_average - current_average) / (
-                            np.log(lrs[i + 10]) - np.log(lrs[i - 10])) * 100
+                        np.log(lrs[i + 10]) - np.log(lrs[i - 10])) * 100
                 if average_change < 1:
                     min_lr = lrs[i]
                     break
         plot_data(lrs[:], avg_data, metric, title, plot, save_path, min_lr, max_lr)
     return None
 
+
 def plot_data(lrs, metrics, metric, title, plot, save_path=None, min_lr=None, max_lr=None):
     plt.figure()
     plt.plot(lrs, metrics)
-    plt.ylim(top=max(metrics[:len(metrics)//2])*1.25, bottom=min(metrics))
+    plt.ylim(top=max(metrics[:len(metrics) // 2]) * 1.25, bottom=min(metrics))
     plt.ylabel(metric)
     plt.xscale('log')
     plt.title(metric + ' vs Learning Rate')
     plt.xlabel('Learning Rate')
     if min_lr is not None:
-        plt.plot([min_lr, min_lr],[np.min(metrics),np.max(metrics)],'r-', label='Min_LR: ' + str(min_lr))
+        plt.plot([min_lr, min_lr], [np.min(metrics), np.max(metrics)], 'r-', label='Min_LR: ' + str(min_lr))
     if max_lr is not None:
-        plt.plot([max_lr, max_lr],[np.min(metrics),np.max(metrics)],'k-', label='Max_LR: ' + str(max_lr))
+        plt.plot([max_lr, max_lr], [np.min(metrics), np.max(metrics)], 'k-', label='Max_LR: ' + str(max_lr))
     val = np.min(lrs)
     while val < np.max(lrs):
-        for add in [2,4,6,8]:
-            plt.plot([val + val*add, val + val*add], [np.min(metrics), np.max(metrics)], 'y-')
-        for add in [0,1,3,5,7,9]:
-            plt.plot([val + val*add, val + val*add], [np.min(metrics), np.max(metrics)], 'g-')
+        for add in [2, 4, 6, 8]:
+            plt.plot([val + val * add, val + val * add], [np.min(metrics), np.max(metrics)], 'y-')
+        for add in [0, 1, 3, 5, 7, 9]:
+            plt.plot([val + val * add, val + val * add], [np.min(metrics), np.max(metrics)], 'g-')
         val *= 10
     if min_lr is not None or max_lr is not None:
         plt.legend()
@@ -194,6 +197,7 @@ def plot_data(lrs, metrics, metric, title, plot, save_path=None, min_lr=None, ma
         plt.show()
     else:
         plt.close()
+
 
 if __name__ == '__main__':
     xxx = 1
