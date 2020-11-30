@@ -47,7 +47,13 @@ def return_hparams(run_data, features_list, excluded_keys=('iteration', 'save'))
     return hparams
 
 
-def is_current_df_in_base_df(data_frame, current_run_df, features_list=('Model_Type', 'min_lr', 'max_lr')):
+def is_df_within_another(data_frame, current_run_df, features_list=('Model_Type', 'min_lr', 'max_lr')):
+    """
+    :param data_frame: a base data_frame from an excel sheet
+    :param current_run_df: current run dataframe
+    :param features_list: list of features to compare along
+    :return: Boolean for if it is contained
+    """
     current_array = current_run_df[features_list].values
     base_array = data_frame[features_list].values
     if np.any(base_array) and np.max([np.min(i == current_array) for i in base_array]):
