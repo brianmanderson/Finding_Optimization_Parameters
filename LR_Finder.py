@@ -139,35 +139,35 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, 
     for metric in metric_list:
         metric_data = np.asarray(all_metrics[metric])
         lrs = np.asarray(all_lrs[metric])[0]
-        averaged_data = np.mean(metric_data,axis=0)
-        averaged_data = np.nan_to_num(averaged_data, nan=np.inf)
+        avg_data = np.mean(metric_data, axis=0)
+        avg_data[np.argwhere(np.isnan(avg_data))] = np.max(avg_data[np.argwhere(~np.isnan(avg_data))])
         min_lr, max_lr = None, None
         if beta > 0.0:
-            averaged_data = smooth_values(averaged_data, beta=beta)
+            avg_data = smooth_values(avg_data, beta=beta)
         if auto_rates and metric == 'loss':
-            min_loss = np.min(averaged_data)
-            min_loss_index = np.where(averaged_data == min_loss)[0][0]
+            min_loss = np.min(avg_data)
+            min_loss_index = np.where(avg_data == min_loss)[0][0]
             max_lr = lrs[min_loss_index]
-            min_lr = 0
+            min_lr = lrs[0]
             for ii in range(min_loss_index, 0, -1):
-                loss = averaged_data[ii]
+                loss = avg_data[ii]
                 if loss > min_loss * 5:  # If it is at least 50% higher, we're on the curve
                     break
             for i in range(ii, 10, -1):
-                previous_average = np.average(averaged_data[i - 10:i])
-                current_average = np.average(averaged_data[i:i + 10])
+                previous_average = np.average(avg_data[i - 10:i])
+                current_average = np.average(avg_data[i:i + 10])
                 average_change = (previous_average - current_average) / (
                             np.log(lrs[i + 10]) - np.log(lrs[i - 10])) * 100
                 if average_change < 1:
                     min_lr = lrs[i]
                     break
-        plot_data(lrs[:], averaged_data, metric, title, plot, save_path, min_lr, max_lr)
+        plot_data(lrs[:], avg_data, metric, title, plot, save_path, min_lr, max_lr)
     return None
 
 def plot_data(lrs, metrics, metric, title, plot, save_path=None, min_lr=None, max_lr=None):
     plt.figure()
     plt.plot(lrs, metrics)
-    plt.ylim(top=max(metrics[:len(metrics)//2])*1.25)
+    plt.ylim(top=max(metrics[:len(metrics)//2])*1.25, bottom=min(metrics)/2)
     plt.ylabel(metric)
     plt.xscale('log')
     plt.title(metric + ' vs Learning Rate')
