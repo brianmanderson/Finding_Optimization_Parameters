@@ -33,7 +33,7 @@ class LearningRateFinder(object):
     def __init__(self, model, train_generator, metrics=['accuracy'], optimizer=SGD, lower_lr=1e-10,
                  steps_per_epoch=None,
                  high_lr=1e0, epochs=5, loss='categorical_crossentropy', out_path=os.path.join('.', 'Learning_rates')):
-        '''
+        """
         :param model: Keras model
         :param train_generator: Keras generator
         :param metrics: Metrics to track, loss is automatically included
@@ -43,7 +43,7 @@ class LearningRateFinder(object):
         :param epochs: number of epochs to perform
         :param loss: defined loss
         :param out_path: path to create output.pkl file
-        '''
+        """
         if steps_per_epoch is None:
             steps_per_epoch = len(train_generator)
         self.steps_per_epoch = steps_per_epoch
@@ -81,7 +81,6 @@ class LearningRateFinder(object):
         K.set_value(self.model.optimizer.lr, lr)
 
     def run(self, train_generator, epochs=5):
-
         self.lrMult = (self.stop_lr / self.start_lr) ** (1.0 / (epochs * self.steps_per_epoch))
 
         callback = LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
@@ -97,27 +96,27 @@ class LearningRateFinder(object):
 
 
 def smooth_values(loss_vals, beta=0.95):
-    avgLoss = 0
-    smooth_vals = []
+    avg_loss = 0
+    smooth_values = []
     for i in range(len(loss_vals)):
         loss = loss_vals[i]
-        avgLoss = (beta * avgLoss) + ((1 - beta) * loss)
-        smooth = avgLoss / (1 - (beta ** (i + 1)))
-        smooth_vals.append(smooth)
-    return smooth_vals
+        avg_loss = (beta * avg_loss) + ((1 - beta) * loss)
+        smooth = avg_loss / (1 - (beta ** (i + 1)))
+        smooth_values.append(smooth)
+    return smooth_values
 
 
 def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, plot=False, auto_rates=False):
-    '''
+    """
     :param paths: type(List or String), if list, will take the average value
     :param metric_list: type(List or String), metrics wanted to be looked at
     :param title: type(String), name of title for graph
     :param save_path: type(String), path to folder of graph creation
-    :param smooth: type(Bool), smooth values?
+    :param beta: parameter for smoothing
     :param plot: type(Bool), plot graph or just save?
     :param auto_rates: type(Bool), write out min and max lr
     :return:
-    '''
+    """
     if type(metric_list) != list:
         metric_list = [metric_list]
     if type(paths) != list:
