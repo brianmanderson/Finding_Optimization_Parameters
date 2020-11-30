@@ -167,7 +167,7 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, 
 def plot_data(lrs, metrics, metric, title, plot, save_path=None, min_lr=None, max_lr=None):
     plt.figure()
     plt.plot(lrs, metrics)
-    plt.ylim(top=max(metrics[:len(metrics)//2])*1.25, bottom=min(metrics)/2)
+    plt.ylim(top=max(metrics[:len(metrics)//2])*1.25, bottom=min(metrics))
     plt.ylabel(metric)
     plt.xscale('log')
     plt.title(metric + ' vs Learning Rate')
