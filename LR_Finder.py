@@ -47,7 +47,6 @@ class LearningRateFinder(object):
             steps_per_epoch = len(train_generator)
         self.steps_per_epoch = steps_per_epoch
         optimizer = optimizer(lr=lower_lr) # Doesn't really matter, will be over-written anyway
-        optimizer = tf.train.experimental.enable_mixed_precision_graph_rewrite(optimizer)
         self.start_lr = lower_lr
         self.stop_lr = high_lr
         model.compile(optimizer, loss=loss, metrics=metrics)
