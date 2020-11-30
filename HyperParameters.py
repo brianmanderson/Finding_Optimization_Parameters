@@ -47,7 +47,7 @@ def return_hparams(run_data, features_list, excluded_keys=('iteration', 'save'))
     return hparams
 
 
-def compare_base_current(data_frame, current_run_df, features_list):
+def is_current_df_in_base_df(data_frame, current_run_df, features_list=('Model_Type', 'min_lr', 'max_lr')):
     current_array = current_run_df[features_list].values
     base_array = data_frame[features_list].values
     if np.any(base_array) and np.max([np.min(i == current_array) for i in base_array]):
