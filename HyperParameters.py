@@ -51,11 +51,11 @@ def is_df_within_another(data_frame, current_run_df, features_list=('Model_Type'
     """
     :param data_frame: a base data_frame from an excel sheet
     :param current_run_df: current run dataframe
-    :param features_list: list of features to compare along
+    :param features_list: list or tuple of features to compare along
     :return: Boolean for if it is contained
     """
-    current_array = current_run_df[features_list].values
-    base_array = data_frame[features_list].values
+    current_array = current_run_df[list(features_list)].values
+    base_array = data_frame[list(features_list)].values
     if np.any(base_array) and np.max([np.min(i == current_array) for i in base_array]):
         return True
     return False
