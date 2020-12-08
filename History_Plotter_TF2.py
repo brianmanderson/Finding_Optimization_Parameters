@@ -20,12 +20,13 @@ def add_to_dictionary(path, all_dictionaries, path_id,
                     temp_dictionary[value.tag] = []
                 temp_dictionary[value.tag].append(value.simple_value)
         for metric_name in temp_dictionary.keys():
-            if metric_name in metric_name_and_criteria.keys():
+            if final_val:
+                metric = temp_dictionary[metric_name][-1]
+            elif metric_name in metric_name_and_criteria.keys():
                 metric = metric_name_and_criteria[metric_name](temp_dictionary[metric_name])
             else:
-                if final_val:
-                    metric = temp_dictionary[metric_name][-1]
-                elif metric_name.find('accuracy') != -1 or metric_name.find('dice') != -1 or metric_name.find('dsc') != -1:
+                if metric_name.find('accuracy') != -1 or metric_name.find('dice') != -1 or \
+                        metric_name.find('dsc') != -1:
                     metric = np.max(temp_dictionary[metric_name])
                 else:
                     metric = np.min(temp_dictionary[metric_name])
@@ -47,7 +48,7 @@ def iterate_paths_add_to_dictionary(path, all_dictionaries, final_val=False,
                                   metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
             except:
                 return None
-    return None
+    return all_dictionaries
 
 
 def complete_dictionary(all_dictionaries):
