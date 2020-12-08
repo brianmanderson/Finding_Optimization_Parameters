@@ -35,8 +35,8 @@ def add_to_dictionary(path, all_dictionaries, path_id,
     return all_dictionaries
 
 
-def create_dictionary_from_path(path, all_dictionaries, final_val=False,
-                                metric_name_and_criteria={'epoch_loss':np.min,'val_dice_coef_3D':np.max}):
+def iterate_paths_add_to_dictionary(path, all_dictionaries, final_val=False,
+                                    metric_name_and_criteria={'epoch_loss':np.min,'val_dice_coef_3D':np.max}):
     files = []
     folders = []
     for root, folders, files in os.walk(path):
@@ -49,13 +49,13 @@ def create_dictionary_from_path(path, all_dictionaries, final_val=False,
         path_id = path_id[-2]
         try:
             print(path)
-            add_to_dictionary(path, all_dictionaries,path_id=path_id,
+            add_to_dictionary(path, all_dictionaries, path_id=path_id,
                               metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
         except:
             return None
     for folder in folders:
-        create_dictionary_from_path(os.path.join(path, folder), all_dictionaries,
-                                    metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
+        iterate_paths_add_to_dictionary(os.path.join(path, folder), all_dictionaries,
+                                        metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
     return None
 
 
@@ -100,8 +100,8 @@ def create_excel_from_event(input_path=None, excel_out_path=os.path.join('.','Mo
     if input_path is None:
         return None
     all_dictionaries = {}
-    create_dictionary_from_path(input_path, all_dictionaries, metric_name_and_criteria=metric_name_and_criteria,
-                                final_val=final_val)
+    iterate_paths_add_to_dictionary(input_path, all_dictionaries, metric_name_and_criteria=metric_name_and_criteria,
+                                    final_val=final_val)
     total_dictionary = complete_dictionary(all_dictionaries)
     df = pd.DataFrame(total_dictionary)
     df.to_excel(excel_out_path, index=0)
