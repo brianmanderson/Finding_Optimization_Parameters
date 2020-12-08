@@ -9,7 +9,7 @@ import pandas as pd
 
 def add_to_dictionary(path, all_dictionaries, path_id,
                       metric_name_and_criteria={'val_loss':np.min,'val_dice_coef_3D':np.max}, final_val=False):
-    path = path.lower()
+
     file_list = [i for i in os.listdir(path) if i.find('event') == 0]
     for file in file_list:
         k = summary_iterator(os.path.join(path,file))
@@ -37,25 +37,16 @@ def add_to_dictionary(path, all_dictionaries, path_id,
 
 def iterate_paths_add_to_dictionary(path, all_dictionaries, final_val=False,
                                     metric_name_and_criteria={'epoch_loss':np.min,'val_dice_coef_3D':np.max}):
-    files = []
-    folders = []
     for root, folders, files in os.walk(path):
-        break
-    event_files = [i for i in files if i.find('event') == 0]
-    if event_files and path.find('validation') != -1:
-        path_id = path.split('\\')
-        if len(path_id) == 1:
-            path_id = path.split('/')
-        path_id = path_id[-2]
-        try:
-            print(path)
-            add_to_dictionary(path, all_dictionaries, path_id=path_id,
-                              metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
-        except:
-            return None
-    for folder in folders:
-        iterate_paths_add_to_dictionary(os.path.join(path, folder), all_dictionaries,
-                                        metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
+        event_files = [i for i in files if i.find('event') == 0]
+        if event_files and root.find('validation') != -1:
+            path_id = os.path.split(os.path.split(root)[0])[-1]
+            try:
+                print(root)
+                add_to_dictionary(root, all_dictionaries, path_id=path_id,
+                                  metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
+            except:
+                return None
     return None
 
 
