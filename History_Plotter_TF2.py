@@ -35,8 +35,8 @@ def add_to_dictionary(path, all_dictionaries, path_id,
     return all_dictionaries
 
 
-def down_folder(path, all_dictionaries, metric_name_and_criteria={'epoch_loss':np.min,'val_dice_coef_3D':np.max},
-                final_val=False):
+def create_dictionary_from_path(path, all_dictionaries, final_val=False,
+                                metric_name_and_criteria={'epoch_loss':np.min,'val_dice_coef_3D':np.max}):
     files = []
     folders = []
     for root, folders, files in os.walk(path):
@@ -54,8 +54,8 @@ def down_folder(path, all_dictionaries, metric_name_and_criteria={'epoch_loss':n
         except:
             return None
     for folder in folders:
-        down_folder(os.path.join(path, folder), all_dictionaries,
-                    metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
+        create_dictionary_from_path(os.path.join(path, folder), all_dictionaries,
+                                    metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
     return None
 
 
@@ -100,7 +100,8 @@ def create_excel_from_event(input_path=None, excel_out_path=os.path.join('.','Mo
     if input_path is None:
         return None
     all_dictionaries = {}
-    down_folder(input_path, all_dictionaries, metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
+    create_dictionary_from_path(input_path, all_dictionaries, metric_name_and_criteria=metric_name_and_criteria,
+                                final_val=final_val)
     total_dictionary = complete_dictionary(all_dictionaries)
     df = pd.DataFrame(total_dictionary)
     df.to_excel(excel_out_path, index=0)
