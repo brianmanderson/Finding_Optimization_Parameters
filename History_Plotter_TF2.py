@@ -3,8 +3,8 @@ __author__ = 'Brian M Anderson'
 import os
 from matplotlib import pyplot as plt
 import numpy as np
-from tensorflow.python.summary.summary_iterator import summary_iterator
 import pandas as pd
+from tensorboard.backend.event_processing import event_accumulator
 
 
 def add_to_dictionary(path, all_dictionaries, path_id, fraction_start=0,
@@ -19,32 +19,26 @@ def add_to_dictionary(path, all_dictionaries, path_id, fraction_start=0,
     :param metric_name_and_criteria: a dictionary of {'metric': 'loss criteria'} to evaluate results
     :return: dictionary full of metric dictionaries from runs
     """
-    file_list = [i for i in os.listdir(path) if i.find('event') == 0]
-    for file in file_list:
-        k = summary_iterator(os.path.join(path, file))
-        temp_dictionary = {}
-        for event in k:
-            for value in event.summary.value:
-                if value.tag not in temp_dictionary:
-                    temp_dictionary[value.tag] = []
-                temp_dictionary[value.tag].append(value.simple_value)
-        for metric_name in temp_dictionary.keys():
-            if fraction_start == -1:
-                metric = temp_dictionary[metric_name][-1]
+    temp_dictionary = {}
+    event_class = event_accumulator.EventAccumulator(path)
+    event_class.Reload()
+    for metric_name in event_class.Tags()['scalars']:
+        w_times, step_nums, metric_values = zip(*event_class.Scalars(metric_name))
+        if fraction_start == -1:
+            metric = metric_values[-1]
+        else:
+            metric_values = metric_values[int(len(metric_values) * fraction_start):]
+            if metric_name in metric_name_and_criteria.keys():
+                metric = metric_name_and_criteria[metric_name](metric_values)
             else:
-                metric_values = temp_dictionary[metric_name]
-                metric_values = metric_values[int(len(metric_values) * fraction_start):]
-                if metric_name in metric_name_and_criteria.keys():
-                    metric = metric_name_and_criteria[metric_name](metric_values)
+                if metric_name.find('accuracy') != -1 or metric_name.find('dice') != -1 or \
+                        metric_name.find('dsc') != -1:
+                    metric = np.max(metric_values)
                 else:
-                    if metric_name.find('accuracy') != -1 or metric_name.find('dice') != -1 or \
-                            metric_name.find('dsc') != -1:
-                        metric = np.max(metric_values)
-                    else:
-                        metric = np.min(metric_values)
-            temp_dictionary[metric_name] = metric
-        all_dictionaries[path_id] = temp_dictionary
-        del temp_dictionary
+                    metric = np.min(metric_values)
+        temp_dictionary[metric_name] = metric
+    all_dictionaries[path_id] = temp_dictionary
+    del temp_dictionary
     return all_dictionaries
 
 
