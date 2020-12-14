@@ -9,7 +9,16 @@ import pandas as pd
 
 def add_to_dictionary(path, all_dictionaries, path_id, fraction_start=0,
                       metric_name_and_criteria={'val_loss': np.min,'val_dice_coef_3D': np.max}, final_val=False):
-
+    """
+    :param path: path to .event files from tensorflow training
+    :param path_id: an id to associate with the final dictionary key
+    :param all_dictionaries: a dictionary which will have all of the run dictionaries
+    :param final_val: deprecated
+    :param fraction_start: fraction along the training processes at which you want to start metric analysis. Use 0 to
+    say you want the entire run. Use -1 to say only the last value
+    :param metric_name_and_criteria: a dictionary of {'metric': 'loss criteria'} to evaluate results
+    :return: dictionary full of metric dictionaries from runs
+    """
     file_list = [i for i in os.listdir(path) if i.find('event') == 0]
     for file in file_list:
         k = summary_iterator(os.path.join(path, file))
@@ -44,7 +53,7 @@ def iterate_paths_add_to_dictionary(path, all_dictionaries, final_val=False, fra
     """
     :param path: path to .event files from tensorflow training
     :param all_dictionaries: a dictionary which will have all of the run dictionaries
-    :param final_val: if you want to take the 'final value' of training. Being removed for fraction_start
+    :param final_val: deprecated
     :param fraction_start: fraction along the training processes at which you want to start metric analysis. Use 0 to
     say you want the entire run. Use -1 to say only the last value
     :param metric_name_and_criteria: a dictionary of {'metric': 'loss criteria'} to evaluate results
