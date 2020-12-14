@@ -7,12 +7,12 @@ from tensorflow.python.summary.summary_iterator import summary_iterator
 import pandas as pd
 
 
-def add_to_dictionary(path, all_dictionaries, path_id,
-                      metric_name_and_criteria={'val_loss':np.min,'val_dice_coef_3D':np.max}, final_val=False):
+def add_to_dictionary(path, all_dictionaries, path_id, fraction_start=0,
+                      metric_name_and_criteria={'val_loss': np.min,'val_dice_coef_3D': np.max}, final_val=False):
 
     file_list = [i for i in os.listdir(path) if i.find('event') == 0]
     for file in file_list:
-        k = summary_iterator(os.path.join(path,file))
+        k = summary_iterator(os.path.join(path, file))
         temp_dictionary = {}
         for event in k:
             for value in event.summary.value:
@@ -20,31 +20,43 @@ def add_to_dictionary(path, all_dictionaries, path_id,
                     temp_dictionary[value.tag] = []
                 temp_dictionary[value.tag].append(value.simple_value)
         for metric_name in temp_dictionary.keys():
-            if final_val:
+            if fraction_start == -1:
                 metric = temp_dictionary[metric_name][-1]
-            elif metric_name in metric_name_and_criteria.keys():
-                metric = metric_name_and_criteria[metric_name](temp_dictionary[metric_name])
             else:
-                if metric_name.find('accuracy') != -1 or metric_name.find('dice') != -1 or \
-                        metric_name.find('dsc') != -1:
-                    metric = np.max(temp_dictionary[metric_name])
+                metric_values = temp_dictionary[metric_name]
+                metric_values = metric_values[int(len(metric_values) * fraction_start):]
+                if metric_name in metric_name_and_criteria.keys():
+                    metric = metric_name_and_criteria[metric_name](metric_values)
                 else:
-                    metric = np.min(temp_dictionary[metric_name])
+                    if metric_name.find('accuracy') != -1 or metric_name.find('dice') != -1 or \
+                            metric_name.find('dsc') != -1:
+                        metric = np.max(metric_values)
+                    else:
+                        metric = np.min(metric_values)
             temp_dictionary[metric_name] = metric
         all_dictionaries[path_id] = temp_dictionary
         del temp_dictionary
     return all_dictionaries
 
 
-def iterate_paths_add_to_dictionary(path, all_dictionaries, final_val=False,
-                                    metric_name_and_criteria={'epoch_loss':np.min,'val_dice_coef_3D':np.max}):
+def iterate_paths_add_to_dictionary(path, all_dictionaries, final_val=False, fraction_start=0,
+                                    metric_name_and_criteria={'epoch_loss': np.min,'val_dice_coef_3D': np.max}):
+    """
+    :param path: path to .event files from tensorflow training
+    :param all_dictionaries: a dictionary which will have all of the run dictionaries
+    :param final_val: if you want to take the 'final value' of training. Being removed for fraction_start
+    :param fraction_start: fraction along the training processes at which you want to start metric analysis. Use 0 to
+    say you want the entire run. Use -1 to say only the last value
+    :param metric_name_and_criteria: a dictionary of {'metric': 'loss criteria'} to evaluate results
+    :return: dictionary full of metric dictionaries from runs
+    """
     for root, folders, files in os.walk(path):
         event_files = [i for i in files if i.find('event') == 0]
         if event_files and root.find('validation') != -1:
             path_id = os.path.split(os.path.split(root)[0])[-1]
             try:
                 print(root)
-                add_to_dictionary(root, all_dictionaries, path_id=path_id,
+                add_to_dictionary(root, all_dictionaries, path_id=path_id, fraction_start=fraction_start,
                                   metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
             except:
                 return None
