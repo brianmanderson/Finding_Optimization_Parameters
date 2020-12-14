@@ -48,6 +48,16 @@ def add_to_dictionary(path, all_dictionaries, path_id, fraction_start=0,
     return all_dictionaries
 
 
+def find_validation_folders(path, folder_dictionary):
+    for root, folders, files in os.walk(path):
+        print(root)
+        event_files = [i for i in files if i.find('event') == 0]
+        if event_files and root.find('validation') != -1:
+            path_id = os.path.split(os.path.split(root)[0])[-1]
+            folder_dictionary[path_id] = root
+    return folder_dictionary
+
+
 def iterate_paths_add_to_dictionary(path, all_dictionaries, final_val=False, fraction_start=0,
                                     metric_name_and_criteria={'epoch_loss': np.min,'val_dice_coef_3D': np.max}):
     """
@@ -59,22 +69,21 @@ def iterate_paths_add_to_dictionary(path, all_dictionaries, final_val=False, fra
     :param metric_name_and_criteria: a dictionary of {'metric': 'loss criteria'} to evaluate results
     :return: dictionary full of metric dictionaries from runs
     """
-    for root, folders, files in os.walk(path):
-        event_files = [i for i in files if i.find('event') == 0]
-        if event_files and root.find('validation') != -1:
-            path_id = os.path.split(os.path.split(root)[0])[-1]
-            try:
-                print(root)
-                add_to_dictionary(root, all_dictionaries, path_id=path_id, fraction_start=fraction_start,
-                                  metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
-            except:
-                return None
+    path_id_dictionary = find_validation_folders(path, {})
+    for path_id_key in path_id_dictionary.keys():
+        path = path_id_dictionary[path_id_key]
+        try:
+            print(path)
+            add_to_dictionary(path, all_dictionaries, path_id=path_id_key, fraction_start=fraction_start,
+                              metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
+        except:
+            continue
     return all_dictionaries
 
 
 def complete_dictionary(all_dictionaries):
     # Get the names of all variables, we will need to make a complete list
-    out_dictionary = {'Trial_ID':[]}
+    out_dictionary = {'Trial_ID': []}
     for trial_id in all_dictionaries:
         try:
             out_dictionary['Trial_ID'].append(int(trial_id.split('_')[-1]))
