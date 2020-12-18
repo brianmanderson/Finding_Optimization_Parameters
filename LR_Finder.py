@@ -106,7 +106,8 @@ def smooth_values(loss_vals, beta=0.95):
     return smooth_values
 
 
-def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, plot=False, auto_rates=False):
+def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, plot=False, auto_rates=False,
+              plot_show=True):
     """
     :param paths: type(List or String), if list, will take the average value
     :param metric_list: type(List or String), metrics wanted to be looked at
@@ -136,7 +137,7 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, 
                 all_metrics[metric].append(metrics)
         else:
             print('No files at ' + path)
-
+    out_dict = {}
     for metric in metric_list:
         metric_data = np.asarray(all_metrics[metric])
         lrs = np.asarray(all_lrs[metric])[0]
@@ -162,8 +163,10 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, 
                 if average_change < 1:
                     min_lr = lrs[i]
                     break
-        plot_data(lrs[:], avg_data, metric, title, plot, save_path, min_lr, max_lr)
-    return None
+        if plot_show:
+            plot_data(lrs[:], avg_data, metric, title, plot, save_path, min_lr, max_lr)
+        out_dict[metric] = {'min_lr': min_lr, 'max_lr': max_lr}
+    return out_dict
 
 
 def plot_data(lrs, metrics, metric, title, plot, save_path=None, min_lr=None, max_lr=None):
