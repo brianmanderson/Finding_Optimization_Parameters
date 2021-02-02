@@ -7,13 +7,24 @@ import pandas as pd
 from tensorboard.backend.event_processing import event_accumulator
 
 
-def add_to_dictionary(path, all_dictionaries, path_id, fraction_start=0,
-                      metric_name_and_criteria={'val_loss': np.min,'val_dice_coef_3D': np.max}, final_val=False):
+def smooth(scalars, weight=0.6):  # Weight between 0 and 1
+    last = scalars[0]  # First value in the plot (first timestep)
+    smoothed = list()
+    for point in scalars:
+        smoothed_val = last * weight + (1 - weight) * point  # Calculate smoothed value
+        smoothed.append(smoothed_val)                        # Save it
+        last = smoothed_val                                  # Anchor the last smoothed value
+
+    return smoothed
+
+
+def add_to_dictionary(path, all_dictionaries, path_id, fraction_start=0, weight_smoothing=0.0,
+                      metric_name_and_criteria={'val_loss': np.min,'val_dice_coef_3D': np.max}):
     """
     :param path: path to .event files from tensorflow training
     :param path_id: an id to associate with the final dictionary key
+    :param weight_smoothing: float 0.0-1.0, fraction to weight on exponential smoothing (recommend 0.6-0.8)
     :param all_dictionaries: a dictionary which will have all of the run dictionaries
-    :param final_val: deprecated
     :param fraction_start: fraction along the training processes at which you want to start metric analysis. Use 0 to
     say you want the entire run. Use -1 to say only the last value
     :param metric_name_and_criteria: a dictionary of {'metric': 'loss criteria'} to evaluate results
@@ -24,6 +35,8 @@ def add_to_dictionary(path, all_dictionaries, path_id, fraction_start=0,
     event_class.Reload()
     for metric_name in event_class.Tags()['scalars']:
         w_times, step_nums, metric_values = zip(*event_class.Scalars(metric_name))
+        if weight_smoothing != 0.0:
+            metric_values = smooth(scalars=metric_values, weight=weight_smoothing)
         if fraction_start == -1:
             metric = metric_values[-1]
         else:
@@ -52,12 +65,12 @@ def find_validation_folders(path, folder_dictionary):
     return folder_dictionary
 
 
-def iterate_paths_add_to_dictionary(path, all_dictionaries, final_val=False, fraction_start=0,
+def iterate_paths_add_to_dictionary(path, all_dictionaries, fraction_start=0, weight_smoothing=0.0,
                                     metric_name_and_criteria={'epoch_loss': np.min,'val_dice_coef_3D': np.max}):
     """
     :param path: path to .event files from tensorflow training
+    :param weight_smoothing: float 0.0-1.0, fraction to weight on exponential smoothing (recommend 0.6-0.8)
     :param all_dictionaries: a dictionary which will have all of the run dictionaries
-    :param final_val: deprecated
     :param fraction_start: fraction along the training processes at which you want to start metric analysis. Use 0 to
     say you want the entire run. Use -1 to say only the last value
     :param metric_name_and_criteria: a dictionary of {'metric': 'loss criteria'} to evaluate results
@@ -69,7 +82,7 @@ def iterate_paths_add_to_dictionary(path, all_dictionaries, final_val=False, fra
         try:
             print(path)
             add_to_dictionary(path, all_dictionaries, path_id=path_id_key, fraction_start=fraction_start,
-                              metric_name_and_criteria=metric_name_and_criteria, final_val=final_val)
+                              metric_name_and_criteria=metric_name_and_criteria, weight_smoothing=weight_smoothing)
         except:
             continue
     return all_dictionaries

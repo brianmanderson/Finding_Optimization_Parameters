@@ -140,13 +140,15 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, 
     out_dict = {}
     for metric in metric_list:
         metric_data = np.asarray(all_metrics[metric])
+        if metric.lower() == 'auc':
+            metric_data = 1 - metric_data
         lrs = np.asarray(all_lrs[metric])[0]
         avg_data = np.mean(metric_data, axis=0)
         avg_data[np.argwhere(np.isnan(avg_data))] = np.max(avg_data[np.argwhere(~np.isnan(avg_data))])
         min_lr, max_lr = None, None
         if beta > 0.0:
             avg_data = smooth_values(avg_data, beta=beta)
-        if auto_rates and metric == 'loss':
+        if auto_rates:
             min_loss = np.min(avg_data)
             min_loss_index = np.where(avg_data == min_loss)[0][0]
             max_lr = lrs[min_loss_index]
@@ -163,13 +165,13 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, 
                 if average_change < 1:
                     min_lr = lrs[i]
                     break
-        if plot_show:
-            plot_data(lrs[:], avg_data, metric, title, plot, save_path, min_lr, max_lr)
+        if plot:
+            plot_data(lrs[:], avg_data, metric, title, plot_show, save_path, min_lr, max_lr)
         out_dict[metric] = {'min_lr': min_lr, 'max_lr': max_lr}
     return out_dict
 
 
-def plot_data(lrs, metrics, metric, title, plot, save_path=None, min_lr=None, max_lr=None):
+def plot_data(lrs, metrics, metric, title, plot_show, save_path=None, min_lr=None, max_lr=None):
     plt.figure()
     plt.plot(lrs, metrics)
     plt.ylim(top=max(metrics[:len(metrics) // 2]) * 1.25, bottom=min(metrics))
@@ -195,7 +197,7 @@ def plot_data(lrs, metrics, metric, title, plot, save_path=None, min_lr=None, ma
             os.makedirs(save_path)
         out_file_name = os.path.join(save_path, title + metric + '.png')
         plt.savefig(out_file_name)
-    if plot:
+    if plot_show:
         plt.show()
     else:
         plt.close()
