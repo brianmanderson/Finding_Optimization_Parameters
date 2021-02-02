@@ -5,7 +5,9 @@ from tensorflow.keras.callbacks import LambdaCallback
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras import backend as K
 import tensorflow as tf
-import os, pickle
+import os
+import pickle
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -106,14 +108,25 @@ def smooth_values(loss_vals, beta=0.95):
     return smooth_values
 
 
-def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, plot=False, auto_rates=False,
+def smooth(scalars, weight=0.6):  # Weight between 0 and 1
+    last = scalars[0]  # First value in the plot (first timestep)
+    smoothed = list()
+    for point in scalars:
+        smoothed_val = last * weight + (1 - weight) * point  # Calculate smoothed value
+        smoothed.append(smoothed_val)                        # Save it
+        last = smoothed_val                                  # Anchor the last smoothed value
+
+    return smoothed
+
+
+def make_plot(paths, metric_list=['loss'], title='', save_path=None, weight_smoothing=0.6, plot=False, auto_rates=False,
               plot_show=True):
     """
     :param paths: type(List or String), if list, will take the average value
     :param metric_list: type(List or String), metrics wanted to be looked at
     :param title: type(String), name of title for graph
     :param save_path: type(String), path to folder of graph creation
-    :param beta: parameter for smoothing
+    :param weight_smoothing: float 0.0-1.0, fraction to weight on exponential smoothing (recommend 0.6-0.8)
     :param plot: type(Bool), plot graph or just save?
     :param auto_rates: type(Bool), write out min and max lr
     :return:
@@ -146,8 +159,8 @@ def make_plot(paths, metric_list=['loss'], title='', save_path=None, beta=0.95, 
         avg_data = np.mean(metric_data, axis=0)
         avg_data[np.argwhere(np.isnan(avg_data))] = np.max(avg_data[np.argwhere(~np.isnan(avg_data))])
         min_lr, max_lr = None, None
-        if beta > 0.0:
-            avg_data = smooth_values(avg_data, beta=beta)
+        if weight_smoothing > 0.0:
+            avg_data = smooth(scalars=avg_data, weight=weight_smoothing)
         if auto_rates:
             min_loss = np.min(avg_data)
             min_loss_index = np.where(avg_data == min_loss)[0][0]
