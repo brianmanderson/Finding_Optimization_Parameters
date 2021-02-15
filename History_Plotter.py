@@ -108,7 +108,7 @@ def plot_from_excel(excel_path,variable_name='layers',metric_name='val_loss',log
     # criteria_base = lambda x, variable_name, value: np.asarray(list(x[variable_name].values())) == value
     # criteria = [partial(criteria_base, variable_name='layers', value=5)]
     variable_name = variable_name.lower()
-    data = pd.read_excel(excel_path).to_dict()
+    data = pd.read_excel(excel_path, engine='openpyxl').to_dict()
     y = np.asarray(list(data[metric_name].values()))
     x = np.asarray(list(data[variable_name].values()))
     keep = np.ones(x.shape)

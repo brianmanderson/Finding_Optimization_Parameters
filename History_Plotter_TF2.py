@@ -105,10 +105,10 @@ def complete_dictionary(all_dictionaries):
 
 
 def combine_hparamxlsx_and_metricxlsx(hparameter_excel_sheet, total_dictionary_xlsx_path, out_path):
-    metric_data = pd.read_excel(total_dictionary_xlsx_path)
+    metric_data = pd.read_excel(total_dictionary_xlsx_path, engine='openpyxl')
     metric_data = metric_data.dropna()
 
-    hparameter_data = pd.read_excel(hparameter_excel_sheet)
+    hparameter_data = pd.read_excel(hparameter_excel_sheet, engine='openpyxl')
     hparameter_data = hparameter_data.dropna()
 
     combined_df = pd.merge(hparameter_data, metric_data, on='Trial_ID')
@@ -141,7 +141,7 @@ def plot_from_excel(excel_path, variable_name='layers', metric_name='val_loss', 
     # criteria_base = lambda x, variable_name, value: np.asarray(list(x[variable_name].values())) == value
     # criteria = [partial(criteria_base, variable_name='layers', value=5)]
     variable_name = variable_name.lower()
-    data = pd.read_excel(excel_path).to_dict()
+    data = pd.read_excel(excel_path, engine='openpyxl').to_dict()
     y = np.asarray(list(data[metric_name].values()))
     x = np.asarray(list(data[variable_name].values()))
     keep = np.ones(x.shape)

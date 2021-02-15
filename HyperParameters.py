@@ -21,7 +21,7 @@ def return_pandas_df(excel_path, features_list=('layers', 'filters', 'max_filter
         df = pd.DataFrame(out_dict)
         df.to_excel(excel_path, index=0)
     else:
-        df = pd.read_excel(excel_path)
+        df = pd.read_excel(excel_path, engine='openpyxl')
     return df
 
 
