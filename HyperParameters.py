@@ -40,10 +40,15 @@ def return_hparams(run_data, features_list, excluded_keys=('iteration', 'save'))
                 break_out = True
         if break_out:
             continue
+        value = run_data[layer_key]
+        if type(value) is np.int64 or type(value) is np.bool_:
+            value = int(value)
+        elif type(value) is np.float64:
+            value = float(value)
         if layer_key in run_data.keys():
             if hparams is None:
                 hparams = OrderedDict()
-            hparams[hp.HParam(layer_key, hp.Discrete([run_data[layer_key]]))] = run_data[layer_key]
+            hparams[hp.HParam(layer_key, hp.Discrete([value]))] = value
     return hparams
 
 
