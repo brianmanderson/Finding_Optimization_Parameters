@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 from tensorboard.backend.event_processing import event_accumulator
+from tensorflow.python.summary.summary_iterator import summary_iterator
 
 
 def smooth(scalars, weight=0.6):  # Weight between 0 and 1
@@ -16,6 +17,15 @@ def smooth(scalars, weight=0.6):  # Weight between 0 and 1
         last = smoothed_val                                  # Anchor the last smoothed value
 
     return smoothed
+
+
+def build_from_backend(path, all_dictionaries, fraction_start=0, weight_smoothing=0.0,
+                      metric_name_and_criteria={'val_loss': np.min,'val_dice_coef_3D': np.max}):
+    for file in os.listdir(path):
+        value_dict = {}
+        for event in summary_iterator(os.path.join(path, file)):
+            for value in event.summary.value:
+                xxx = 1
 
 
 def add_to_dictionary(path, all_dictionaries, path_id, fraction_start=0, weight_smoothing=0.0,
